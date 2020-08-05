@@ -2714,6 +2714,9 @@ class GlobalState {
 
   static bool isLoggedIn = false;
 
+  static final ScrollController classesPageScrollController =
+      new ScrollController();
+
   static final GlobalKey<ScaffoldState> homePageScaffoldKey =
       GlobalKey<ScaffoldState>();
 
@@ -2956,8 +2959,6 @@ class HomePage extends StatelessWidget {
 class PeriodicTablePage extends StatelessWidget {
   @override
   Widget build(context) {
-    // ScrollController _ctrl = ScrollController();
-
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -3079,50 +3080,59 @@ class ClassesPage extends StatelessWidget {
                       controller: ScrollController(),
                       isAlwaysShown: true,
                       child: CustomScrollbar.rrect(
+                        controller: GlobalState.classesPageScrollController,
                         child: GridView.builder(
-                        itemCount: 5,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            childAspectRatio: 2.0,
-                            crossAxisCount: MediaQuery.of(context).size.width <=
-                                    500
-                                ? 1
-                                : (MediaQuery.of(context).size.width <= 1000 &&
-                                        MediaQuery.of(context).size.width > 500)
-                                    ? 2
-                                    : 3,
-                            crossAxisSpacing: 0.5,
-                            mainAxisSpacing: 0.5),
-                        itemBuilder: (BuildContext context, int _ind) {
-                          return GestureDetector(
-                            onTap: () {},
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Card(
-                                  shadowColor: Theme.of(context).primaryColor,
-                                  elevation: 16,
-                                  child: Container(
-                                    width: MediaQuery.of(context).size.width,
-                                    child: Row(children: <Widget>[
-                                      Expanded(
-                                        flex: 5,
-                                        child: Container(
-                                            decoration: BoxDecoration(
-                                                shape: BoxShape.rectangle,
-                                                image: DecorationImage(
-                                                    fit: BoxFit.cover,
-                                                    image: AssetImage(
-                                                        "assets/hand-books.jfif")))),
-                                      ),
-                                      Expanded(
-                                        flex: 5,
-                                        child: Container(),
-                                      ),
-                                    ]),
-                                  )),
-                            ),
-                          );
-                        },
-                      ),
+                          controller: GlobalState.classesPageScrollController,
+                          itemCount: 5,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                  childAspectRatio: 2.0,
+                                  crossAxisCount:
+                                      MediaQuery.of(context).size.width <= 500
+                                          ? 1
+                                          : (MediaQuery.of(context)
+                                                          .size
+                                                          .width <=
+                                                      1000 &&
+                                                  MediaQuery.of(context)
+                                                          .size
+                                                          .width >
+                                                      500)
+                                              ? 2
+                                              : 3,
+                                  crossAxisSpacing: 0.5,
+                                  mainAxisSpacing: 0.5),
+                          itemBuilder: (BuildContext context, int _ind) {
+                            return GestureDetector(
+                              onTap: () {},
+                              child: Padding(
+                                padding: EdgeInsets.all(8),
+                                child: Card(
+                                    shadowColor: Theme.of(context).primaryColor,
+                                    elevation: 16,
+                                    child: Container(
+                                      width: MediaQuery.of(context).size.width,
+                                      child: Row(children: <Widget>[
+                                        Expanded(
+                                          flex: 5,
+                                          child: Container(
+                                              decoration: BoxDecoration(
+                                                  shape: BoxShape.rectangle,
+                                                  image: DecorationImage(
+                                                      fit: BoxFit.cover,
+                                                      image: AssetImage(
+                                                          "assets/hand-books.jfif")))),
+                                        ),
+                                        Expanded(
+                                          flex: 5,
+                                          child: Container(),
+                                        ),
+                                      ]),
+                                    )),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),

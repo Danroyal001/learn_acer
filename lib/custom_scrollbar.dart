@@ -171,7 +171,7 @@ class CustomScrollbar extends StatefulWidget {
     }) {
       final scrollThumb = CustomPaint(
         key: scrollThumbKey,
-        foregroundPainter: ArrowCustomPainter(Colors.grey),
+        foregroundPainter: ArrowCustomPainter(Colors.white),
         child: Material(
           elevation: 4.0,
           child: Container(

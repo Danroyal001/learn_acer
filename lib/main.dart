@@ -15,6 +15,7 @@ class AppRoot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'LEARN ACER',
       theme: ThemeData(
         brightness: Brightness.light,
@@ -2714,6 +2715,33 @@ class GlobalState {
 
   static bool isLoggedIn = false;
 
+  static List<Map<String, String>> demoClassList = <Map<String, String>>[
+    {
+      "name": "Chemistry Made Simple",
+      "admin": "Daniel",
+      "created": "August 5th, 2020",
+      "members": "50"
+    },
+    {
+      "name": "Physics Parliament",
+      "admin": "Daniel",
+      "created": "August 5th, 2020",
+      "members": "50"
+    },
+    {
+      "name": "Math Lords",
+      "admin": "Daniel",
+      "created": "August 5th, 2020",
+      "members": "50"
+    },
+    {
+      "name": "English Gurus",
+      "admin": "Daniel",
+      "created": "August 5th, 2020",
+      "members": "50"
+    }
+  ];
+
   static final ScrollController classesPageScrollController =
       new ScrollController();
 
@@ -2946,10 +2974,7 @@ class HomePage extends StatelessWidget {
       body: Row(children: <Widget>[
         if (MediaQuery.of(context).size.width > 700) NavRail(),
         Expanded(
-          child: Scrollbar(
-              controller: ScrollController(),
-              isAlwaysShown: true,
-              child: HomePageContent()),
+          child: Scrollbar(child: HomePageContent()),
         ),
       ]),
     );
@@ -3017,13 +3042,136 @@ class ClassesPage extends StatelessWidget {
   @override
   Widget build(context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).primaryColor,
+        icon: Icon(Icons.add),
+        label: Text("CREATE"),
+        onPressed: () {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return Dialog(
+                  shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(10.0)), //this right here
+                  child: Container(
+                    height: MediaQuery.of(context).size.height <= 700
+                        ? MediaQuery.of(context).size.height - 150
+                        : 700,
+                    width: MediaQuery.of(context).size.width <= 700
+                        ? MediaQuery.of(context).size.width - 100
+                        : 600,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            "CREATE A NEW CLASS",
+                            style: Theme.of(context).textTheme.headline6,
+                          ),
+                          Container(
+                              child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: <Widget>[
+                              Container(
+                                child: TextField(
+                                  keyboardType: TextInputType.text,
+                                  autofocus: false,
+                                  cursorColor: Colors.green[900],
+                                  maxLines: 1,
+                                  showCursor: true,
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                  ),
+                                  textAlign: TextAlign.start,
+                                  enableSuggestions: true,
+                                  autocorrect: true,
+                                  onTap: () => null,
+                                  onChanged: (String val) {},
+                                  onEditingComplete: () {},
+                                  onSubmitted: (String val) {},
+                                  readOnly: false,
+                                  decoration: const InputDecoration(
+                                    isDense: false,
+                                    labelText: "Class Title:",
+                                    labelStyle: TextStyle(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    enabled: true,
+                                    prefixIcon: Icon(Icons.book),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                child: TextField(
+                                  keyboardType: TextInputType.text,
+                                  autofocus: false,
+                                  cursorColor: Colors.green[900],
+                                  maxLines: 1,
+                                  showCursor: true,
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                  ),
+                                  textAlign: TextAlign.start,
+                                  enableSuggestions: true,
+                                  autocorrect: true,
+                                  onTap: () => null,
+                                  onChanged: (String val) {},
+                                  onEditingComplete: () {},
+                                  onSubmitted: (String val) {},
+                                  readOnly: false,
+                                  decoration: const InputDecoration(
+                                    isDense: false,
+                                    labelText: "Name of Class Admin(s):",
+                                    labelStyle: TextStyle(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    enabled: true,
+                                    prefixIcon: Icon(Icons.account_box),
+                                  ),
+                                ),
+                              ),
+                              Divider(
+                                height: 50,
+                              ),
+                              Row(
+                                children: <Widget>[
+                                  Expanded(
+                                      child: FlatButton(
+                                    onPressed: Navigator.of(context).pop,
+                                    color: Colors.red,
+                                    child: Text("CANCEL"),
+                                  )),
+                                  Expanded(
+                                      child: FlatButton(
+                                    onPressed: () {},
+                                    color: Colors.green[700],
+                                    child: Text("CREATE"),
+                                  )),
+                                ],
+                              )
+                            ],
+                          )),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              });
+        },
+      ),
       appBar: AppBar(
         // bottom: (),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.of(context).popAndPushNamed("/home"),
         ),
-        title: Text("CLASSES"),
+        title: Text("CLASSES (Total: ${GlobalState.demoClassList.length})"),
       ),
       body: SafeArea(
         child: Center(
@@ -3076,63 +3224,118 @@ class ClassesPage extends StatelessWidget {
                 ),
                 Expanded(
                   child: Container(
-                    child: Scrollbar(
-                      controller: ScrollController(),
-                      isAlwaysShown: true,
-                      child: CustomScrollbar.rrect(
+                    child: CustomScrollbar.arrows(
+                      heightScrollThumb: 70.0,
+                      backgroundColor: Colors.grey[200],
+                      alwaysVisibleScrollThumb: true,
+                      controller: GlobalState.classesPageScrollController,
+                      child: GridView.builder(
                         controller: GlobalState.classesPageScrollController,
-                        child: GridView.builder(
-                          controller: GlobalState.classesPageScrollController,
-                          itemCount: 5,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                  childAspectRatio: 2.0,
-                                  crossAxisCount:
-                                      MediaQuery.of(context).size.width <= 500
-                                          ? 1
-                                          : (MediaQuery.of(context)
-                                                          .size
-                                                          .width <=
-                                                      1000 &&
-                                                  MediaQuery.of(context)
-                                                          .size
-                                                          .width >
-                                                      500)
-                                              ? 2
-                                              : 3,
-                                  crossAxisSpacing: 0.5,
-                                  mainAxisSpacing: 0.5),
-                          itemBuilder: (BuildContext context, int _ind) {
-                            return GestureDetector(
-                              onTap: () {},
-                              child: Padding(
-                                padding: EdgeInsets.all(8),
-                                child: Card(
-                                    shadowColor: Theme.of(context).primaryColor,
-                                    elevation: 16,
-                                    child: Container(
-                                      width: MediaQuery.of(context).size.width,
-                                      child: Row(children: <Widget>[
-                                        Expanded(
-                                          flex: 5,
-                                          child: Container(
-                                              decoration: BoxDecoration(
-                                                  shape: BoxShape.rectangle,
-                                                  image: DecorationImage(
-                                                      fit: BoxFit.cover,
-                                                      image: AssetImage(
-                                                          "assets/hand-books.jfif")))),
+                        itemCount: GlobalState.demoClassList.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            childAspectRatio: 2.0,
+                            crossAxisCount: MediaQuery.of(context).size.width <=
+                                    500
+                                ? 1
+                                : (MediaQuery.of(context).size.width <= 1000 &&
+                                        MediaQuery.of(context).size.width > 500)
+                                    ? 2
+                                    : 3,
+                            crossAxisSpacing: 0.5,
+                            mainAxisSpacing: 0.5),
+                        itemBuilder: (BuildContext context, int _ind) {
+                          Map<String, String> classListItem =
+                              GlobalState.demoClassList[_ind];
+                          return GestureDetector(
+                            onTap: () {},
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Card(
+                                  shadowColor: Theme.of(context).primaryColor,
+                                  elevation: 16,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        top: BorderSide(
+                                          width: 1.0,
+                                          color: Colors.black,
                                         ),
-                                        Expanded(
-                                          flex: 5,
-                                          child: Container(),
+                                        left: BorderSide(
+                                          width: 1.0,
+                                          color: Colors.black,
                                         ),
-                                      ]),
-                                    )),
-                              ),
-                            );
-                          },
-                        ),
+                                        right: BorderSide(
+                                          width: 1.0,
+                                          color: Colors.black,
+                                        ),
+                                        bottom: BorderSide(
+                                          width: 1.0,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ),
+                                    width: MediaQuery.of(context).size.width,
+                                    child: Row(children: <Widget>[
+                                      Expanded(
+                                        flex: 5,
+                                        child: Container(
+                                            decoration: BoxDecoration(
+                                                shape: BoxShape.rectangle,
+                                                image: DecorationImage(
+                                                    fit: BoxFit.fill,
+                                                    image: AssetImage(
+                                                        "assets/hand-books.jfif")))),
+                                      ),
+                                      Expanded(
+                                        flex: 5,
+                                        child: Container(
+                                          child: Center(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: <Widget>[
+                                                Padding(
+                                                  padding: EdgeInsets.all(16.8),
+                                                  child: Text(
+                                                      "${classListItem['name']}",
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .headline6),
+                                                ),
+                                                Padding(
+                                                  padding: EdgeInsets.all(10),
+                                                  child: Text(
+                                                      "Class Admin: ${classListItem['admin']}",
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .subtitle1),
+                                                ),
+                                                Padding(
+                                                  padding: EdgeInsets.all(10),
+                                                  child: Text(
+                                                      "Created: ${classListItem['created']}",
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .subtitle1),
+                                                ),
+                                                Padding(
+                                                  padding: EdgeInsets.all(10),
+                                                  child: Text(
+                                                      "Members: ${classListItem['members']}",
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .subtitle1),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ]),
+                                  )),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -3739,25 +3942,25 @@ class _NavRailState extends State<NavRail> {
                   : Theme.of(context).primaryColor,
           selectedIndex: _selIndex,
           extended: _isExtended,
-          leading: Column(children: <Widget>[
-            CircleAvatar(
-              backgroundImage: AssetImage("assets/Icon-512.png"),
-            ),
-            Divider(),
-            IconButton(
-              icon: Icon(Icons.exit_to_app),
-              tooltip: "Logout",
-              onPressed: () {},
-            ),
-            Divider(),
-            Divider(),
-          ]),
           trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Divider(),
                 Divider(),
+                CircleAvatar(
+                  backgroundImage: AssetImage("assets/Icon-512.png"),
+                ),
+                Divider(),
+                IconButton(
+                  icon: Icon(Icons.exit_to_app),
+                  tooltip: "Logout",
+                  onPressed: () {},
+                ),
+              ]),
+          leading: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
                 IconButton(
                     tooltip: "Expand/Collapse This Menu",
                     icon: Icon(Icons.menu),
@@ -3765,7 +3968,9 @@ class _NavRailState extends State<NavRail> {
                       setState(() {
                         _isExtended = !_isExtended;
                       });
-                    })
+                    }),
+                Divider(),
+                Divider(),
               ]),
           destinations:
               List.generate(GlobalState.menuItems.length, (int _index) {
@@ -3849,7 +4054,7 @@ class HomePageContent extends StatelessWidget {
                 height: 40,
                 child: Center(
                   child: Text(
-                    "Learning Continues",
+                    "Learn with ease",
                     textAlign: TextAlign.center,
                     locale: Locale("en", "NG"),
                     style: TextStyle(

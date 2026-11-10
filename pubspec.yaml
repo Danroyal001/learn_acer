@@ -36,26 +36,45 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+  fonts:
+    - family: YoungSerif
+      fonts:
+        - asset: assets/fonts/YoungSerif-Regular.ttf
+    - family: WorkSans
+      fonts:
+        - asset: assets/fonts/WorkSans-Regular.ttf
+        - asset: assets/fonts/WorkSans-Italic.ttf
+          style: italic
+        - asset: assets/fonts/WorkSans-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/WorkSans-BoldItalic.ttf
+          weight: 700
+          style: italic
 
 dartvel:
   org: com.danieleffiong
   backendHost: 0.0.0.0
   backendPort: 3000
   devBackendHost: http://localhost:3000
-  prodBackendHost: https://api.learn-acer.com
+  prodBackendHost: https://learnacer.sigmadev.digital
   pagesDir: lib/pages
   backendDir: lib/backend
   apiBasePath: /api
   envFiles: [.env, .env.local]
   plugins: []
   ota: false
+  auth:
+    tagline: "Your class, your notes and your exam practice."
+    brandPanelColor: "#1D4ED8"
+    pages:
+      signIn: /login
+      signUp: /sign-up
+  server:
+    trustedProxies:
+      - 127.0.0.1
   platforms:
     - web
     - android
-    - ios
-    - linux
-    - macos
-    - windows
 
   transitions:
     default: fade
@@ -63,6 +82,13 @@ dartvel:
     curve: easeInOut
 
   seo:
-    siteName: learn acer
-    defaultTitle: Welcome
-    defaultDescription: A Dartvel application
+    siteName: Learn Acer
+    defaultTitle: Learn Acer
+    defaultDescription: Learn with ease at home or at school. Classes with join codes, notes, quizzes and exam practice, a periodic table and a scientific calculator.
+  pwa:
+    icon: assets/icon.png
+    name: Learn Acer
+    shortName: Learn Acer
+    description: Classes, notes, quizzes and exam practice for students, teachers and parents.
+    themeColor: '#1D4ED8'
+    backgroundColor: '#FBFAF5'

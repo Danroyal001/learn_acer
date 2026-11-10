@@ -1,113 +1,32 @@
-# learn_acer
+# Learn Acer
 
-A new Dartvel project.
+Learn with ease, at school or at home. Built with [Dartvel](https://dartvel.dev).
 
-## Getting Started
+- **Classes.** A teacher starts a class and gets a six-character code with no look-alike letters
+  (no 0/O or 1/I/L). Students join as students; parents join with their child's email and see only
+  that child's scores.
+- **Learning aid.** The teacher posts notes and links to the class.
+- **Quizzes.** The teacher sets multiple-choice quizzes. Students get the questions without the answers;
+  the server marks each attempt and keeps the score, with a WAEC grade (A1 to F9) and a review of the
+  right answers.
+- **Exam practice.** Element symbols, times tables and mental maths, ten questions at a time, generated
+  so every answer is right by construction.
+- **Periodic table.** All 118 elements on the 18-column table (a searchable list on phones), each with
+  its own page: mass, configuration, shells, melting and boiling points, density, discovery.
+- **Calculator.** Scientific, with the usual order of operations, degrees or radians, and plain-English
+  errors ("You cannot divide by zero").
 
-### Prerequisites
+Light mode is an exercise book (paper, ink blue, a red margin line); dark mode is a chalkboard.
 
-- Flutter SDK >= 3.47.0
-- Dart SDK >= 3.13.0
+## Run and build
 
-### Installation
-
-```bash
-flutter pub get
-```
-
-### Development
-
-```bash
+```sh
 dartvel dev
+dartvel test
+dartvel build web-server   # one binary; set DARTVEL_DATA_DIR outside the release folder
+dartvel build android
 ```
 
-This will:
-- Generate the client in `lib/dartvel_client/`
-- Start the backend server on http://localhost:3000
-- Run your Flutter app with hot reload
-
-### Generating
-
-`dartvel dev` and `dartvel build` generate before they run, so most of the
-time there is nothing to do. To generate on its own — after adding a page,
-model or backend function, or on a fresh clone before opening the project in
-an editor:
-
-```bash
-dart run dartvel_cli:dartvel routes
-```
-
-That writes everything under `lib/dartvel_client/`: the barrel your pages
-import, the router, models, backend function clients and config. It is
-gitignored and never edited by hand: a fresh clone generates it.
-
-### Project Structure
-
-```
-lib/
-├── pages/              # Page components (file-based routing)
-├── models/             # @DVModel classes
-├── backend/
-│   └── functions/      # API endpoints
-├── components/         # Shared UI widgets
-├── styles/             # Shared DVModifier styles
-├── services/           # Business logic and integrations
-└── main.dart
-
-.env                    # Environment variables (gitignored)
-pubspec.yaml           # Dependencies and Dartvel config
-```
-
-### Adding Pages
-
-Create a new file in `lib/pages/`:
-
-```dart
-// lib/pages/about.dart
-import '../dartvel_client/dartvel_client.dart';
-import 'package:flutter/material.dart';
-
-
-@DVPage(
-  title: 'About',
-  showAppBar: true,
-)
-@pragma('vm:entry-point')
-Widget _aboutPage(BuildContext context) => buildAboutPage(context);
-
-Widget buildAboutPage(BuildContext context) => DVBox.list([
-    const DVText('About'),
-    const DVText('About page'),
-  ]).modifier(const DVModifier().padding(16));
-```
-
-Route is automatically available at `/about`.
-
-### Adding API Endpoints
-
-Create a new file in `lib/backend/functions/`:
-
-```dart
-// lib/backend/functions/hello.get.dart
-import 'package:dartvel_core/dartvel.dart';
-
-@DVBackendFunction()
-Map<String, Object?> _hello() => <String, Object?>{'message': 'Hello World!'};
-```
-
-Endpoint is automatically available at `GET /api/hello`, and pages call it as `hello()`.
-
-### Building for Production
-
-```bash
-dartvel build
-```
-
-## Learn More
-
-- [Dartvel Documentation](https://dartvel.dev)
-- [Flutter Documentation](https://flutter.dev)
-
-## License
-
-MIT
+Element data: [Bowserinator/Periodic-Table-JSON](https://github.com/Bowserinator/Periodic-Table-JSON), from
+Wikipedia, CC BY-SA 3.0; regenerate `lib/content/elements.g.dart` with `node tool/generate_elements.mjs <json>`.
+Fonts: Young Serif and Work Sans, SIL Open Font License.

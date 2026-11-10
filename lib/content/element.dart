@@ -77,3 +77,27 @@ String familyOf(ChemicalElement element) {
   if (category.contains('nonmetal')) return 'Nonmetal';
   return 'Unknown properties';
 }
+
+/// [value] to at most [digits] decimals, without trailing zeros.
+String trimNumber(double value, {int digits = 4}) {
+  final String fixed = value.toStringAsFixed(digits);
+  return fixed.contains('.') ? fixed.replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '') : fixed;
+}
+
+/// The label and value of each fact, in the order a textbook lists them.
+List<(String, String)> elementFacts(ChemicalElement element) => <(String, String)>[
+      ('Atomic number', '${element.number}'),
+      ('Atomic mass', element.atomicMass == null ? 'unknown' : '${trimNumber(element.atomicMass!)} u'),
+      ('Family', familyOf(element)),
+      ('Group and period', 'Group ${element.group}, period ${element.period}'),
+      ('Block', element.block == null ? 'unknown' : '${element.block}-block'),
+      ('Electron configuration', element.electronConfiguration?.replaceFirst('*', '') ?? 'unknown'),
+      ('Electrons per shell', element.shells.join(', ')),
+      ('State at room temperature', element.phase ?? 'unknown'),
+      ('Melting point', kelvinToCelsius(element.meltKelvin)),
+      ('Boiling point', kelvinToCelsius(element.boilKelvin)),
+      ('Density', element.density == null ? 'unknown' : '${trimNumber(element.density!)} ${element.phase == 'Gas' ? 'g/L' : 'g/cm³'}'),
+      ('Electronegativity (Pauling)', element.electronegativity == null ? 'unknown' : trimNumber(element.electronegativity!)),
+      ('Discovered by', element.discoveredBy ?? 'unknown'),
+      if (element.namedBy != null) ('Named by', element.namedBy!),
+    ];

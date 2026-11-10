@@ -16,6 +16,8 @@ Learn with ease, at school or at home. Built with [Dartvel](https://dartvel.dev)
 - **Calculator.** Scientific, with the usual order of operations, degrees or radians, and plain-English
   errors ("You cannot divide by zero").
 
+Every screen is written in Dartvel primitives (DVBox, DVText, DVModifier, signals, @DVFunctionalWidget); pages hold only their @DVPage function and the screens live in lib/components.
+
 Light mode is an exercise book (paper, ink blue, a red margin line); dark mode is a chalkboard.
 
 ## Run and build

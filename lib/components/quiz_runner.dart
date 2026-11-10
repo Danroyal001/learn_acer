@@ -1,8 +1,9 @@
 // Taking a quiz: one question at a time, then the mark, the grade and a
 // review that shows the right answer and why. Used by class quizzes (marked on
 // the server) and exam practice (marked here).
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
+import '../dartvel_client/dartvel_client.dart';
 import 'ui.dart';
 
 /// What marking answered: the score and, per question, the right option.
@@ -15,182 +16,109 @@ class const QuizMark({
   final String note = '',
 });
 
-class QuizRunner extends StatefulWidget {
-  const QuizRunner({super.key, required this.prompts, required this.options, required this.mark, this.onAgain});
+String optionLetter(int index) => String.fromCharCode(65 + index);
 
-  final List<String> prompts;
-  final List<List<String>> options;
+@DVFunctionalWidget()
+Widget _quizRunner(
+  BuildContext context, {
+  required List<String> prompts,
+  required List<List<String>> options,
+  required Future<QuizMark> Function(List<int?> chosen) mark,
+  VoidCallback? onAgain,
+}) {
+  final Palette palette = Palette.of(context);
+  final DVSignal<List<int?>> chosen = context.signal(List<int?>.filled(prompts.length, null));
+  final DVSignal<int> at = context.signal(0);
+  final DVSignal<bool> busy = context.signal(false);
+  final DVSignal<String> problem = context.signal('');
+  final DVSignal<QuizMark?> result = context.signal<QuizMark?>(null);
 
-  /// Marks the chosen options (null when skipped).
-  final Future<QuizMark> Function(List<int?> chosen) mark;
-  final VoidCallback? onAgain;
-
-  @override
-  State<QuizRunner> createState() => _QuizRunnerState();
-}
-
-class _QuizRunnerState extends State<QuizRunner> {
-  late List<int?> _chosen = List<int?>.filled(widget.prompts.length, null);
-  int _at = 0;
-  bool _busy = false;
-  String? _problem;
-  QuizMark? _mark;
-
-  Future<void> _finish() async {
-    setState(() {
-      _busy = true;
-      _problem = null;
-    });
+  Future<void> finish() async {
+    busy.value = true;
+    problem.value = '';
     try {
-      final QuizMark mark = await widget.mark(_chosen);
-      if (mounted) setState(() => _mark = mark);
+      result.value = await mark(chosen.read());
     } on Object catch (error) {
-      if (mounted) setState(() => _problem = problemText(error));
+      problem.value = problemText(error);
     } finally {
-      if (mounted) setState(() => _busy = false);
+      busy.value = false;
     }
   }
 
-  @override
-  Widget build(BuildContext context) => _mark == null ? _question(context) : _review(context, _mark!);
-
-  Widget _question(BuildContext context) {
-    final Palette palette = Palette.of(context);
-    final int count = widget.prompts.length;
-    final bool last = _at == count - 1;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Semantics(
-          label: 'Question ${_at + 1} of $count',
-          child: ExcludeSemantics(
-            child: Row(
-              children: <Widget>[
-                Text('Question ${_at + 1} of $count', style: textStyle(context, size: 15, weight: FontWeight.w600, color: palette.muted)),
-                const SizedBox(width: Space.md),
-                Expanded(child: LinearProgressIndicator(value: (_at + 1) / count, color: palette.accent, backgroundColor: palette.rule)),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: Space.lg),
-        Panel(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Semantics(headingLevel: 2, child: Text(widget.prompts[_at], style: displayStyle(context, size: 22))),
-              const SizedBox(height: Space.lg),
-              RadioGroup<int>(
-                groupValue: _chosen[_at],
-                onChanged: (int? chosen) => setState(() => _chosen[_at] = chosen),
-                child: Column(
-                  children: <Widget>[
-                    for (int option = 0; option < widget.options[_at].length; option++)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: Space.sm),
-                        child: Material(
-                          color: _chosen[_at] == option ? palette.accentSoft : Colors.transparent,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: _chosen[_at] == option ? palette.accent : palette.rule)),
-                          child: RadioListTile<int>(
-                            value: option,
-                            title: Text('${String.fromCharCode(65 + option)}.  ${widget.options[_at][option]}', style: textStyle(context)),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: Space.lg),
-        Wrap(
-          spacing: Space.md,
-          runSpacing: Space.sm,
-          children: <Widget>[
-            if (_at > 0) QuietButton('Back', tooltip: 'The previous question', onPressed: () => setState(() => _at--)),
-            if (!last) PrimaryButton(_chosen[_at] == null ? 'Skip' : 'Next', tooltip: 'The next question', onPressed: () => setState(() => _at++)),
-            if (last) PrimaryButton('Mark my answers', tooltip: 'See your score and the right answers', busy: _busy, onPressed: _finish),
-          ],
-        ),
-        if (_problem != null) Notice(_problem!),
-      ],
-    );
+  void choose(int option) {
+    final List<int?> next = List<int?>.of(chosen.read());
+    next[at.read()] = option;
+    chosen.value = next;
   }
 
-  Widget _review(BuildContext context, QuizMark mark) {
-    final Palette palette = Palette.of(context);
-    final int percent = mark.total == 0 ? 0 : (mark.correct * 100 / mark.total).round();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Semantics(
-          liveRegion: true,
-          child: Panel(
-            child: Wrap(
-              spacing: Space.x2,
-              runSpacing: Space.md,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: <Widget>[
-                Text(mark.grade, style: displayStyle(context, size: 56, color: percent >= 50 ? palette.success : palette.danger)),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text('${mark.correct} out of ${mark.total} ($percent%)', style: displayStyle(context, size: 24)),
-                    Text(percent >= 75 ? 'Excellent.' : percent >= 50 ? 'A pass. Look at the ones you missed.' : 'Not yet. Read the answers below and try again.', style: textStyle(context, color: palette.muted)),
-                    if (mark.note.isNotEmpty) Text(mark.note, style: textStyle(context, size: 14, color: palette.muted)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SectionTitle('Your answers'),
-        for (int index = 0; index < widget.prompts.length; index++) _ReviewRow(index: index, prompt: widget.prompts[index], options: widget.options[index], chosen: _chosen[index], answer: mark.answers[index], explanation: mark.explanations[index]),
-        if (widget.onAgain != null) ...<Widget>[
-          const SizedBox(height: Space.lg),
-          PrimaryButton('Try another set', tooltip: 'New questions', onPressed: widget.onAgain),
+  final QuizMark? marked = result.value;
+  if (marked != null) {
+    final int percent = marked.total == 0 ? 0 : (marked.correct * 100 / marked.total).round();
+    return DVBox.list(<Widget>[
+      Panel(
+        spacing: Space.xs,
+        children: <Widget>[
+          DVText(marked.grade).modifier(DVModifier().fontFamily(displayFont).fontSize(56).color(percent >= 50 ? palette.success : palette.danger).semanticLabel('Grade ${marked.grade}')),
+          DVText('${marked.correct} out of ${marked.total} ($percent%)').modifier(DVModifier().fontFamily(displayFont).fontSize(24).color(palette.ink).semanticRole('status')),
+          BodyText(text: percent >= 75 ? 'Excellent.' : percent >= 50 ? 'A pass. Look at the ones you missed.' : 'Not yet. Read the answers below and try again.', muted: true),
+          if (marked.note.isNotEmpty) BodyText(text: marked.note, size: 14, muted: true),
         ],
-      ],
-    );
+      ),
+      const SectionTitle(title: 'Your answers'),
+      for (int index = 0; index < prompts.length; index++)
+        ReviewRow(
+          prompt: '${index + 1}. ${prompts[index]}',
+          options: options[index],
+          chosen: chosen.value[index] ?? -1,
+          answer: marked.answers[index],
+          explanation: marked.explanations[index],
+        ),
+      if (onAgain != null) DVBox(PrimaryButton(label: 'Try another set', tooltip: 'New questions', onTap: onAgain), const DVModifier().paddingOnly(top: Space.lg)),
+    ], spacing: Space.md);
   }
+
+  final int count = prompts.length;
+  final int index = at.value;
+  final bool lastOne = index == count - 1;
+  return DVBox.list(<Widget>[
+    DVText('Question ${index + 1} of $count').modifier(DVModifier().fontFamily(textFont).fontSize(15).fontWeight(FontWeight.w600).color(palette.muted)),
+    Panel(
+      children: <Widget>[
+        SectionTitle(title: prompts[index], level: 2, size: 22),
+        for (int option = 0; option < options[index].length; option++)
+          DVText('${optionLetter(option)}.  ${options[index][option]}').modifier(
+            DVModifier()
+                .fontFamily(textFont)
+                .fontSize(16)
+                .color(palette.ink)
+                .backgroundColor(chosen.value[index] == option ? palette.accentSoft : palette.surface)
+                .border(Border.all(color: chosen.value[index] == option ? palette.accent : palette.rule, width: chosen.value[index] == option ? 2 : 1))
+                .rounded(8)
+                .paddingSymmetric(horizontal: Space.lg, vertical: Space.md)
+                .minimumTapTarget()
+                .semanticLabel('Option ${optionLetter(option)}: ${options[index][option]}${chosen.value[index] == option ? ', chosen' : ''}')
+                .tooltip('Choose ${optionLetter(option)}')
+                .onTap(() => choose(option)),
+          ),
+      ],
+    ),
+    DVBox.wrapLine(<Widget>[
+      if (index > 0) QuietButton(label: 'Back', tooltip: 'The previous question', onTap: () => at.value = at.read() - 1),
+      if (!lastOne) PrimaryButton(label: chosen.value[index] == null ? 'Skip' : 'Next', tooltip: 'The next question', onTap: () => at.value = at.read() + 1),
+      if (lastOne) PrimaryButton(label: 'Mark my answers', tooltip: 'See your score and the right answers', busy: busy.value, onTap: finish),
+    ], spacing: Space.md, crossAlign: DVCrossAlign.center),
+    if (problem.value.isNotEmpty) Notice(text: problem.value),
+  ], spacing: Space.md);
 }
 
-class _ReviewRow extends StatelessWidget {
-  const _ReviewRow({required this.index, required this.prompt, required this.options, required this.chosen, required this.answer, required this.explanation});
-
-  final int index;
-  final String prompt;
-  final List<String> options;
-  final int? chosen;
-  final int answer;
-  final String explanation;
-
-  @override
-  Widget build(BuildContext context) {
-    final Palette palette = Palette.of(context);
-    final bool right = chosen == answer;
-    String option(int? at) => at == null || at < 0 || at >= options.length ? 'nothing' : '${String.fromCharCode(65 + at)}. ${options[at]}';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: Space.md),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(Space.lg),
-        decoration: BoxDecoration(
-          color: palette.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border(left: BorderSide(color: right ? palette.success : palette.danger, width: 4)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text('${index + 1}. $prompt', style: textStyle(context, weight: FontWeight.w600)),
-            const SizedBox(height: Space.xs),
-            Text(right ? 'Right: ${option(answer)}' : 'You chose ${option(chosen)}. The answer is ${option(answer)}.', style: textStyle(context, size: 15, color: right ? palette.success : palette.danger)),
-            if (explanation.isNotEmpty) Padding(padding: const EdgeInsets.only(top: Space.xs), child: Text(explanation, style: textStyle(context, size: 15, color: palette.muted))),
-          ],
-        ),
-      ),
-    );
-  }
+@DVFunctionalWidget()
+Widget _reviewRow(BuildContext context, {required String prompt, required List<String> options, required int chosen, required int answer, required String explanation}) {
+  final Palette palette = Palette.of(context);
+  final bool right = chosen == answer;
+  String option(int at) => at < 0 || at >= options.length ? 'nothing' : '${optionLetter(at)}. ${options[at]}';
+  return DVBox.list(<Widget>[
+    BodyText(text: prompt, bold: true),
+    BodyText(text: right ? 'Right: ${option(answer)}' : 'You chose ${option(chosen)}. The answer is ${option(answer)}.', size: 15, color: right ? palette.success : palette.danger),
+    if (explanation.isNotEmpty) BodyText(text: explanation, size: 15, muted: true),
+  ], spacing: Space.xs, modifier: DVModifier().backgroundColor(palette.surface).rounded(10).padding(Space.lg).border(Border(left: BorderSide(color: right ? palette.success : palette.danger, width: 4))));
 }

@@ -41,12 +41,6 @@ abstract final class Space {
   static const double x4 = 64;
 }
 
-TextStyle textStyle(BuildContext context, {double size = 16, FontWeight weight = FontWeight.w400, Color? color, double height = 1.45}) =>
-    TextStyle(fontFamily: textFont, fontSize: size, fontWeight: weight, color: color ?? Palette.of(context).ink, height: height);
-
-TextStyle displayStyle(BuildContext context, {double size = 32, Color? color}) =>
-    TextStyle(fontFamily: displayFont, fontSize: size, color: color ?? Palette.of(context).ink, height: 1.15, letterSpacing: -0.3);
-
 ThemeData learnAcerTheme(Brightness brightness) {
   final Palette palette = Palette._(brightness == Brightness.dark);
   return ThemeData(
@@ -65,227 +59,177 @@ ThemeData learnAcerTheme(Brightness brightness) {
 }
 
 /// A page's width-bounded column with the design guide's margins.
-class PageColumn extends StatelessWidget {
-  const PageColumn({super.key, required this.children, this.maxWidth = 920});
-
-  final List<Widget> children;
-  final double maxWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    final double width = MediaQuery.sizeOf(context).width;
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: width < 600 ? Space.lg : Space.x2, vertical: Space.x2),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
-        ),
-      ),
-    );
-  }
+@DVFunctionalWidget()
+Widget _pageColumn(BuildContext context, {required List<Widget> children, double maxWidth = 920}) {
+  final bool narrow = MediaQuery.sizeOf(context).width < 600;
+  return DVBox(
+    DVBox.list(
+      children,
+      spacing: 0,
+      modifier: DVModifier().maxWidth(maxWidth).paddingSymmetric(horizontal: narrow ? Space.lg : Space.x2, vertical: Space.x2),
+    ),
+    const DVModifier().centered(),
+  );
 }
 
 /// The page's one level-1 heading, with an optional line under it.
-class PageTitle extends StatelessWidget {
-  const PageTitle(this.title, {super.key, this.lead});
-
-  final String title;
-  final String? lead;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: Space.xl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Semantics(headingLevel: 1, child: Text(title, style: displayStyle(context, size: MediaQuery.sizeOf(context).width < 600 ? 30 : 40))),
-            if (lead != null) ...<Widget>[
-              const SizedBox(height: Space.sm),
-              ConstrainedBox(constraints: const BoxConstraints(maxWidth: 640), child: Text(lead!, style: textStyle(context, size: 17, color: Palette.of(context).muted))),
-            ],
-          ],
-        ),
-      );
+@DVFunctionalWidget()
+Widget _pageTitle(BuildContext context, {required String title, String lead = ''}) {
+  final Palette palette = Palette.of(context);
+  final bool narrow = MediaQuery.sizeOf(context).width < 600;
+  return DVBox.list(<Widget>[
+    DVText(title).modifier(DVModifier().semanticHeading(1).fontFamily(displayFont).fontSize(narrow ? 30 : 40).lineHeight(1.15).color(palette.ink)),
+    if (lead.isNotEmpty) DVText(lead).modifier(DVModifier().maxWidth(640).fontFamily(textFont).fontSize(17).lineHeight(1.45).color(palette.muted)),
+  ], spacing: Space.sm, modifier: const DVModifier().paddingOnly(bottom: Space.xl));
 }
 
 /// A level-2 heading inside a page.
-class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.title, {super.key});
+@DVFunctionalWidget()
+Widget _sectionTitle(BuildContext context, {required String title, int level = 2, double size = 22}) => DVText(title).modifier(
+      DVModifier().semanticHeading(level).fontFamily(displayFont).fontSize(size).lineHeight(1.2).color(Palette.of(context).ink).paddingOnly(top: level == 2 ? Space.xl : 0, bottom: Space.md),
+    );
 
-  final String title;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(top: Space.xl, bottom: Space.md),
-        child: Semantics(headingLevel: 2, child: Text(title, style: displayStyle(context, size: 22))),
-      );
-}
+/// Running text in the text face.
+@DVFunctionalWidget()
+Widget _bodyText(BuildContext context, {required String text, double size = 16, bool muted = false, bool bold = false, Color? color}) => DVText(text).modifier(
+      DVModifier()
+          .fontFamily(textFont)
+          .fontSize(size)
+          .lineHeight(1.45)
+          .fontWeight(bold ? FontWeight.w700 : FontWeight.w400)
+          .color(color ?? (muted ? Palette.of(context).muted : Palette.of(context).ink)),
+    );
 
 /// A white page of the exercise book, or a patch of board, holding a group.
-class Panel extends StatelessWidget {
-  const Panel({super.key, required this.child, this.padding = const EdgeInsets.all(Space.xl)});
-
-  final Widget child;
-  final EdgeInsets padding;
-
-  @override
-  Widget build(BuildContext context) {
-    final Palette palette = Palette.of(context);
-    return Container(
-      width: double.infinity,
-      padding: padding,
-      decoration: BoxDecoration(color: palette.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: palette.rule)),
-      child: child,
-    );
-  }
+@DVFunctionalWidget()
+Widget _panel(BuildContext context, {required List<Widget> children, double padding = Space.xl, double spacing = Space.md}) {
+  final Palette palette = Palette.of(context);
+  return DVBox.list(
+    children,
+    spacing: spacing,
+    modifier: DVModifier().backgroundColor(palette.surface).rounded(12).border(Border.all(color: palette.rule)).padding(padding),
+  );
 }
 
 /// The screen's one main action.
-class PrimaryButton extends StatelessWidget {
-  const PrimaryButton(this.label, {super.key, required this.onPressed, required this.tooltip, this.busy = false, this.icon});
-
-  final String label;
-  final VoidCallback? onPressed;
-  final String tooltip;
-  final bool busy;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final Palette palette = Palette.of(context);
-    return Tooltip(
-      message: tooltip,
-      excludeFromSemantics: true,
-      child: FilledButton.icon(
-        onPressed: busy ? null : onPressed,
-        icon: busy
-            ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: palette.onAccent))
-            : (icon == null ? const SizedBox.shrink() : Icon(icon, size: 20)),
-        label: Text(label, style: textStyle(context, size: 16, weight: FontWeight.w700, color: palette.onAccent)),
-        style: FilledButton.styleFrom(
-          backgroundColor: palette.accent,
-          minimumSize: const Size(48, 48),
-          padding: const EdgeInsets.symmetric(horizontal: Space.xl, vertical: Space.md),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-      ),
-    );
-  }
+@DVFunctionalWidget()
+Widget _primaryButton(BuildContext context, {required String label, required String tooltip, required VoidCallback onTap, bool busy = false}) {
+  final Palette palette = Palette.of(context);
+  return DVText(busy ? 'Working…' : label).modifier(
+    DVModifier()
+        .fontFamily(textFont)
+        .fontSize(16)
+        .fontWeight(FontWeight.w700)
+        .color(palette.onAccent)
+        .backgroundColor(busy ? palette.muted : palette.accent)
+        .rounded(8)
+        .paddingSymmetric(horizontal: Space.xl, vertical: Space.md)
+        .minimumTapTarget()
+        .tooltip(tooltip)
+        .onTap(busy ? () {} : onTap),
+  );
 }
 
 /// A quieter action next to the main one.
-class QuietButton extends StatelessWidget {
-  const QuietButton(this.label, {super.key, required this.onPressed, required this.tooltip, this.color});
-
-  final String label;
-  final VoidCallback? onPressed;
-  final String tooltip;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: tooltip,
-        excludeFromSemantics: true,
-        child: TextButton(
-          onPressed: onPressed,
-          style: TextButton.styleFrom(minimumSize: const Size(48, 48), padding: const EdgeInsets.symmetric(horizontal: Space.lg)),
-          child: Text(label, style: textStyle(context, size: 16, weight: FontWeight.w600, color: color ?? Palette.of(context).accent)),
-        ),
-      );
-}
+@DVFunctionalWidget()
+Widget _quietButton(BuildContext context, {required String label, required String tooltip, required VoidCallback onTap, Color? color}) => DVText(label).modifier(
+      DVModifier()
+          .fontFamily(textFont)
+          .fontSize(16)
+          .fontWeight(FontWeight.w600)
+          .color(color ?? Palette.of(context).accent)
+          .paddingSymmetric(horizontal: Space.lg, vertical: Space.md)
+          .minimumTapTarget()
+          .tooltip(tooltip)
+          .onTap(onTap),
+    );
 
 /// A link to another page of the app, drawn as underlined text.
-class RouteLink extends StatelessWidget {
-  const RouteLink(this.label, {super.key, required this.to, required this.tooltip, this.size = 16});
-
-  final String label;
-  final DVRouteTarget to;
-  final String tooltip;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) => Tooltip(
-        message: tooltip,
-        excludeFromSemantics: true,
-        child: DVNavLink(
-          to: to,
-          preview: DVLinkPreview.none,
-          semanticLabel: '$label: $tooltip',
-          padding: const EdgeInsets.symmetric(vertical: Space.md),
-          child: Text(
-            label,
-            style: textStyle(context, size: size, weight: FontWeight.w600, color: Palette.of(context).accent).copyWith(decoration: TextDecoration.underline),
-          ),
-        ),
-      );
-}
-
-/// A labelled text field: the label is always visible, never only a placeholder.
-class LabelledField extends StatelessWidget {
-  const LabelledField({
-    super.key,
-    required this.label,
-    required this.controller,
-    this.hint,
-    this.error,
-    this.maxLines = 1,
-    this.onSubmitted,
-    this.keyboardType,
-    this.textCapitalization = TextCapitalization.none,
-  });
-
-  final String label;
-  final TextEditingController controller;
-  final String? hint;
-  final String? error;
-  final int maxLines;
-  final ValueChanged<String>? onSubmitted;
-  final TextInputType? keyboardType;
-  final TextCapitalization textCapitalization;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: Space.lg),
-        child: TextField(
-          controller: controller,
-          maxLines: maxLines,
-          minLines: maxLines > 1 ? 3 : 1,
-          onSubmitted: onSubmitted,
-          keyboardType: keyboardType,
-          textCapitalization: textCapitalization,
-          style: textStyle(context),
-          decoration: InputDecoration(
-            labelText: label,
-            floatingLabelBehavior: FloatingLabelBehavior.always,
-            labelStyle: textStyle(context, size: 16, weight: FontWeight.w600),
-            hintText: hint,
-            errorText: error,
-            errorMaxLines: 3,
-          ),
-        ),
-      );
-}
-
-/// A message under a form: what went wrong, or that it worked.
-class Notice extends StatelessWidget {
-  const Notice(this.text, {super.key, this.good = false});
-
-  final String text;
-  final bool good;
-
-  @override
-  Widget build(BuildContext context) {
-    final Palette palette = Palette.of(context);
-    return Semantics(
-      liveRegion: true,
-      child: Padding(
-        padding: const EdgeInsets.only(top: Space.md),
-        child: Text(text, style: textStyle(context, size: 15, weight: FontWeight.w600, color: good ? palette.success : palette.danger)),
+@DVFunctionalWidget()
+Widget _routeLink(BuildContext context, {required String label, required DVRouteTarget to, required String tooltip, double size = 16}) => DVNavLink(
+      to: to,
+      preview: DVLinkPreview.none,
+      semanticLabel: '$label: $tooltip',
+      padding: const EdgeInsets.symmetric(vertical: Space.md),
+      child: DVText(label).modifier(
+        DVModifier().fontFamily(textFont).fontSize(size).fontWeight(FontWeight.w600).color(Palette.of(context).accent).decoration(TextDecoration.underline).tooltip(tooltip),
       ),
     );
-  }
+
+/// A link off the site, drawn as underlined text.
+@DVFunctionalWidget()
+Widget _outLink(BuildContext context, {required String label, required String url, required String tooltip, double size = 15, bool muted = false}) => DVNavLink.external(
+      url,
+      semanticLabel: '$label: $tooltip',
+      padding: const EdgeInsets.symmetric(vertical: Space.md),
+      child: DVText(label).modifier(
+        DVModifier()
+            .fontFamily(textFont)
+            .fontSize(size)
+            .fontWeight(muted ? FontWeight.w400 : FontWeight.w600)
+            .color(muted ? Palette.of(context).muted : Palette.of(context).accent)
+            .decoration(TextDecoration.underline)
+            .tooltip(tooltip),
+      ),
+    );
+
+/// A labelled text field: the label is always visible, never only a placeholder.
+@DVFunctionalWidget()
+Widget _field(
+  BuildContext context, {
+  required String label,
+  required String value,
+  required ValueChanged<String> onChanged,
+  String hint = '',
+  String? error,
+  bool multiline = false,
+  VoidCallback? onSubmitted,
+}) =>
+    DVText(value).modifier(
+      DVModifier()
+          .input(label: label, hint: hint.isEmpty ? null : hint, error: error, multiline: multiline, onChanged: onChanged, onSubmitted: onSubmitted)
+          .fontFamily(textFont)
+          .fontSize(16)
+          .paddingOnly(bottom: Space.lg),
+    );
+
+/// A message under a form: what went wrong, or that it worked.
+@DVFunctionalWidget()
+Widget _notice(BuildContext context, {required String text, bool good = false}) {
+  final Palette palette = Palette.of(context);
+  return DVText(text).modifier(
+    DVModifier().fontFamily(textFont).fontSize(15).fontWeight(FontWeight.w600).color(good ? palette.success : palette.danger).paddingOnly(top: Space.md).semanticRole('status'),
+  );
 }
+
+/// One choice out of a few, as a row of buttons; the chosen one is filled and
+/// says so to a screen reader. Stands in for radio buttons and segmented controls.
+@DVFunctionalWidget()
+Widget _choiceRow(BuildContext context, {required List<(String, String, String)> options, required String selected, required ValueChanged<String> onChanged}) {
+  final Palette palette = Palette.of(context);
+  return DVBox.wrapLine(<Widget>[
+    for (final (String value, String label, String hint) in options)
+      DVText(label).modifier(
+        DVModifier()
+            .fontFamily(textFont)
+            .fontSize(15)
+            .fontWeight(FontWeight.w600)
+            .color(value == selected ? palette.onAccent : palette.ink)
+            .backgroundColor(value == selected ? palette.accent : palette.surface)
+            .border(Border.all(color: value == selected ? palette.accent : palette.muted))
+            .rounded(8)
+            .paddingSymmetric(horizontal: Space.lg, vertical: Space.md)
+            .minimumTapTarget()
+            .semanticLabel('$label${value == selected ? ', chosen' : ''}')
+            .tooltip(hint)
+            .onTap(() => onChanged(value)),
+      ),
+  ], spacing: Space.sm, crossAlign: DVCrossAlign.center);
+}
+
+/// A short "loading" line while the server answers.
+@DVFunctionalWidget()
+Widget _loadingLine(BuildContext context) => DVText('Loading…').modifier(DVModifier().fontFamily(textFont).fontSize(15).color(Palette.of(context).muted).semanticRole('status'));
 
 /// What to tell the person when a server call fails: the server's own words
 /// for a refusal, a plain line for anything else.
@@ -300,4 +244,14 @@ String shortDate(String iso) {
   if (at == null) return '';
   const List<String> months = <String>['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return '${at.day} ${months[at.month - 1]} ${at.year}';
+}
+
+/// Runs [work] once after the first frame, for loading a page's data.
+void onFirstFrame(BuildContext context, DVSignal<bool> started, VoidCallback work) {
+  if (started.read()) return;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!context.mounted || started.read()) return;
+    started.value = true;
+    work();
+  });
 }

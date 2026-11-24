@@ -69,5 +69,7 @@ Widget _siteFooter(BuildContext context) {
   return DVBox.wrapLine(<Widget>[
     const BodyText(text: 'Learn Acer: learn with ease, at school or at home.', size: 14, muted: true),
     const OutLink(label: 'Element data: Wikipedia, CC BY-SA 3.0', url: 'https://creativecommons.org/licenses/by-sa/3.0/', tooltip: 'The licence of the element data', size: 14, muted: true),
+    RouteLink(label: 'Privacy', to: DVRoutes.privacy, tooltip: 'What Learn Acer keeps about you', size: 14),
+    RouteLink(label: 'Terms of use', to: DVRoutes.terms, tooltip: 'The terms of using Learn Acer', size: 14),
   ], spacing: Space.xl, crossAlign: DVCrossAlign.center, modifier: DVModifier().border(Border(top: BorderSide(color: palette.rule))).paddingSymmetric(horizontal: Space.x2, vertical: Space.xl));
 }
